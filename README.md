@@ -8,6 +8,21 @@ non-max provides types similar to the std `NonZero*` types, but instead requires
 that their values are not the maximum for their type. This ensures that
 `Option<NonMax*>` is no larger than `NonMax*`.
 
+### Example
+
+```rust
+use non_max::{NonMaxU8};
+
+let value = NonMaxU8::new(16)
+    .expect("16 should definitely fit in an i8");
+
+assert_eq!(value.get(), 16);
+assert_eq!(std::mem::size_of_val(&value), 1);
+
+let oops = NonMaxU8::new(255);
+assert_eq!(oops, None);
+```
+
 ### Minimum Supported Rust Version (MSRV)
 
 non-max supports Rust 1.34.1 and newer. Until this library reaches 1.0,
