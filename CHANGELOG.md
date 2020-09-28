@@ -1,6 +1,8 @@
 # nonmax Changelog
 
 ## Unreleased Changes
+
+## 0.4.0 (2020-09-27)
 * Raised MSRV to 1.46.0 to make more methods `const`.
 * Marked all methods as `const`.
 * Added documentation for all items.
