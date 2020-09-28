@@ -1,17 +1,31 @@
-# non-max
+# nonmax
 
-[![GitHub CI Status](https://github.com/LPGhatguy/non-max/workflows/CI/badge.svg)](https://github.com/LPGhatguy/non-max/actions)
-[![non-max on crates.io](https://img.shields.io/crates/v/non-max.svg)](https://crates.io/crates/non-max)
-[![non-max docs](https://img.shields.io/badge/docs-docs.rs-orange.svg)](https://docs.rs/non-max)
+[![GitHub CI Status](https://github.com/LPGhatguy/nonmax/workflows/CI/badge.svg)](https://github.com/LPGhatguy/nonmax/actions)
+[![nonmax on crates.io](https://img.shields.io/crates/v/nonmax.svg)](https://crates.io/crates/nonmax)
+[![nonmax docs](https://img.shields.io/badge/docs-docs.rs-orange.svg)](https://docs.rs/nonmax)
 
-non-max provides types similar to the std `NonZero*` types, but instead requires
+nonmax provides types similar to the std `NonZero*` types, but instead requires
 that their values are not the maximum for their type. This ensures that
 `Option<NonMax*>` is no larger than `NonMax*`.
+
+nonmax supports every type that has a corresponding non-zero variant in the
+standard library:
+
+* `NonMaxI8`
+* `NonMaxI16`
+* `NonMaxI32`
+* `NonMaxI64`
+* `NonMaxISize`
+* `NonMaxU8`
+* `NonMaxU16`
+* `NonMaxU32`
+* `NonMaxU64`
+* `NonMaxUSize`
 
 ### Example
 
 ```rust
-use non_max::{NonMaxI16, NonMaxU8};
+use nonmax::{NonMaxI16, NonMaxU8};
 
 let value = NonMaxU8::new(16).expect("16 should definitely fit in a u8");
 assert_eq!(value.get(), 16);
@@ -27,7 +41,7 @@ assert_eq!(oops, None);
 
 ### Minimum Supported Rust Version (MSRV)
 
-non-max supports Rust 1.34.1 and newer. Until this library reaches 1.0,
+nonmax supports Rust 1.34.1 and newer. Until this library reaches 1.0,
 changes to the MSRV will require major version bumps. After 1.0, MSRV changes
 will only require minor version bumps, but will need significant justification.
 

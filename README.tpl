@@ -1,4 +1,4 @@
-# non-max
+# nonmax
 
 {{readme}}
 

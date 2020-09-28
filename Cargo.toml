@@ -1,8 +1,15 @@
 [package]
-name = "non-max"
-version = "0.1.0"
+name = "nonmax"
+description = "Numeric types that cannot hold maximum values"
+version = "0.2.0"
 authors = ["Lucien Greathouse <me@lpghatguy.com>"]
 edition = "2018"
+documentation = "https://docs.rs/nonmax"
+homepage = "https://github.com/LPGhatguy/nonmax"
+repository = "https://github.com/LPGhatguy/nonmax"
+readme = "README.md"
+keywords = ["nonmax", "non-max", "nonzero", "non-zero"]
+license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

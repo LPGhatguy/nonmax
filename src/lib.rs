@@ -1,16 +1,30 @@
 /*!
-[![GitHub CI Status](https://github.com/LPGhatguy/non-max/workflows/CI/badge.svg)](https://github.com/LPGhatguy/non-max/actions)
-[![non-max on crates.io](https://img.shields.io/crates/v/non-max.svg)](https://crates.io/crates/non-max)
-[![non-max docs](https://img.shields.io/badge/docs-docs.rs-orange.svg)](https://docs.rs/non-max)
+[![GitHub CI Status](https://github.com/LPGhatguy/nonmax/workflows/CI/badge.svg)](https://github.com/LPGhatguy/nonmax/actions)
+[![nonmax on crates.io](https://img.shields.io/crates/v/nonmax.svg)](https://crates.io/crates/nonmax)
+[![nonmax docs](https://img.shields.io/badge/docs-docs.rs-orange.svg)](https://docs.rs/nonmax)
 
-non-max provides types similar to the std `NonZero*` types, but instead requires
+nonmax provides types similar to the std `NonZero*` types, but instead requires
 that their values are not the maximum for their type. This ensures that
 `Option<NonMax*>` is no larger than `NonMax*`.
+
+nonmax supports every type that has a corresponding non-zero variant in the
+standard library:
+
+* `NonMaxI8`
+* `NonMaxI16`
+* `NonMaxI32`
+* `NonMaxI64`
+* `NonMaxISize`
+* `NonMaxU8`
+* `NonMaxU16`
+* `NonMaxU32`
+* `NonMaxU64`
+* `NonMaxUSize`
 
 ## Example
 
 ```
-use non_max::{NonMaxI16, NonMaxU8};
+use nonmax::{NonMaxI16, NonMaxU8};
 
 let value = NonMaxU8::new(16).expect("16 should definitely fit in a u8");
 assert_eq!(value.get(), 16);
@@ -26,7 +40,7 @@ assert_eq!(oops, None);
 
 ## Minimum Supported Rust Version (MSRV)
 
-non-max supports Rust 1.34.1 and newer. Until this library reaches 1.0,
+nonmax supports Rust 1.34.1 and newer. Until this library reaches 1.0,
 changes to the MSRV will require major version bumps. After 1.0, MSRV changes
 will only require minor version bumps, but will need significant justification.
 */
@@ -37,13 +51,13 @@ will only require minor version bumps, but will need significant justification.
 // #![deny(clippy::integer_arithmetic)]
 // #![forbid(missing_docs)]
 
-macro_rules! non_max {
-    ( $non_max: ident, $non_zero: ident, $primitive: ident ) => {
+macro_rules! nonmax {
+    ( $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
         #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
         #[repr(transparent)]
-        pub struct $non_max(std::num::$non_zero);
+        pub struct $nonmax(std::num::$non_zero);
 
-        impl $non_max {
+        impl $nonmax {
             #[inline]
             pub fn new(value: $primitive) -> Option<Self> {
                 if value == $primitive::max_value() {
@@ -76,33 +90,33 @@ macro_rules! non_max {
 
             #[test]
             fn construct() {
-                let zero = $non_max::new(0).unwrap();
+                let zero = $nonmax::new(0).unwrap();
                 assert_eq!(zero.get(), 0);
 
-                let some = $non_max::new(19).unwrap();
+                let some = $nonmax::new(19).unwrap();
                 assert_eq!(some.get(), 19);
 
-                let max = $non_max::new($primitive::max_value());
+                let max = $nonmax::new($primitive::max_value());
                 assert_eq!(max, None);
             }
 
             #[test]
             fn sizes_correct() {
-                assert_eq!(size_of::<$primitive>(), size_of::<$non_max>());
-                assert_eq!(size_of::<$non_max>(), size_of::<Option<$non_max>>());
+                assert_eq!(size_of::<$primitive>(), size_of::<$nonmax>());
+                assert_eq!(size_of::<$nonmax>(), size_of::<Option<$nonmax>>());
             }
         }
     };
 }
 
-non_max!(NonMaxI8, NonZeroI8, i8);
-non_max!(NonMaxI16, NonZeroI16, i16);
-non_max!(NonMaxI32, NonZeroI32, i32);
-non_max!(NonMaxI64, NonZeroI64, i64);
-non_max!(NonMaxISize, NonZeroIsize, isize);
+nonmax!(NonMaxI8, NonZeroI8, i8);
+nonmax!(NonMaxI16, NonZeroI16, i16);
+nonmax!(NonMaxI32, NonZeroI32, i32);
+nonmax!(NonMaxI64, NonZeroI64, i64);
+nonmax!(NonMaxISize, NonZeroIsize, isize);
 
-non_max!(NonMaxU8, NonZeroU8, u8);
-non_max!(NonMaxU16, NonZeroU16, u16);
-non_max!(NonMaxU32, NonZeroU32, u32);
-non_max!(NonMaxU64, NonZeroU64, u64);
-non_max!(NonMaxUSize, NonZeroUsize, usize);
+nonmax!(NonMaxU8, NonZeroU8, u8);
+nonmax!(NonMaxU16, NonZeroU16, u16);
+nonmax!(NonMaxU32, NonZeroU32, u32);
+nonmax!(NonMaxU64, NonZeroU64, u64);
+nonmax!(NonMaxUSize, NonZeroUsize, usize);
