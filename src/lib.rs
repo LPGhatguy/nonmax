@@ -40,26 +40,25 @@ assert_eq!(oops, None);
 
 ## Minimum Supported Rust Version (MSRV)
 
-nonmax supports Rust 1.34.1 and newer. Until this library reaches 1.0,
+nonmax supports Rust 1.46.0 and newer. Until this library reaches 1.0,
 changes to the MSRV will require major version bumps. After 1.0, MSRV changes
 will only require minor version bumps, but will need significant justification.
 */
 
-// This crate is sensitive to integer overflow and wrapping behavior. As such,
-// we should usually use methods like `checked_add` and `checked_sub` instead
-// of the `Add` or `Sub` operators.
-// #![deny(clippy::integer_arithmetic)]
-// #![forbid(missing_docs)]
+#![forbid(missing_docs)]
 
 macro_rules! nonmax {
     ( $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
+        /// An integer that is known not to equal its maximum value.
         #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
         #[repr(transparent)]
         pub struct $nonmax(std::num::$non_zero);
 
         impl $nonmax {
+            /// Creates a new non-max if the given value is not the maximum
+            /// value.
             #[inline]
-            pub fn new(value: $primitive) -> Option<Self> {
+            pub const fn new(value: $primitive) -> Option<Self> {
                 if value == $primitive::max_value() {
                     None
                 } else {
@@ -70,14 +69,21 @@ macro_rules! nonmax {
                 }
             }
 
+            /// Creates a new non-max without checking the value.
+            ///
+            /// # Safety
+            ///
+            /// The value must not equal the maximum representable value for the
+            /// primitive type.
             #[inline]
-            pub unsafe fn new_unchecked(value: $primitive) -> Self {
+            pub const unsafe fn new_unchecked(value: $primitive) -> Self {
                 let inner = std::num::$non_zero::new_unchecked(value ^ $primitive::max_value());
                 Self(inner)
             }
 
+            /// Returns the value as a primitive type.
             #[inline]
-            pub fn get(&self) -> $primitive {
+            pub const fn get(&self) -> $primitive {
                 self.0.get() ^ $primitive::max_value()
             }
         }
