@@ -15,12 +15,12 @@ standard library:
 * `NonMaxI16`
 * `NonMaxI32`
 * `NonMaxI64`
-* `NonMaxISize`
+* `NonMaxIsize`
 * `NonMaxU8`
 * `NonMaxU16`
 * `NonMaxU32`
 * `NonMaxU64`
-* `NonMaxUSize`
+* `NonMaxUsize`
 
 ### Example
 

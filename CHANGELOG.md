@@ -2,5 +2,8 @@
 
 ## Unreleased Changes
 
+## 0.3.0 (2020-09-27)
+* Fixed casing of `NonMaxUsize` and `NonMaxIsize`
+
 ## 0.2.0 (2020-09-27)
 * Initial release
