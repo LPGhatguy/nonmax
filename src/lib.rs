@@ -10,13 +10,15 @@ that their values are not the maximum for their type. This ensures that
 ## Example
 
 ```
-use non_max::{NonMaxU8};
+use non_max::{NonMaxI16, NonMaxU8};
 
-let value = NonMaxU8::new(16)
-    .expect("16 should definitely fit in an i8");
-
+let value = NonMaxU8::new(16).expect("16 should definitely fit in a u8");
 assert_eq!(value.get(), 16);
 assert_eq!(std::mem::size_of_val(&value), 1);
+
+let signed = NonMaxI16::new(i16::min_value()).expect("minimum values are fine");
+assert_eq!(signed.get(), i16::min_value());
+assert_eq!(std::mem::size_of_val(&signed), 2);
 
 let oops = NonMaxU8::new(255);
 assert_eq!(oops, None);
@@ -47,20 +49,22 @@ macro_rules! non_max {
                 if value == $primitive::max_value() {
                     None
                 } else {
-                    let inner = unsafe { std::num::$non_zero::new_unchecked(value + 1) };
+                    let inner = unsafe {
+                        std::num::$non_zero::new_unchecked(value ^ $primitive::max_value())
+                    };
                     Some(Self(inner))
                 }
             }
 
             #[inline]
             pub unsafe fn new_unchecked(value: $primitive) -> Self {
-                let inner = std::num::$non_zero::new_unchecked(value + 1);
+                let inner = std::num::$non_zero::new_unchecked(value ^ $primitive::max_value());
                 Self(inner)
             }
 
             #[inline]
             pub fn get(&self) -> $primitive {
-                self.0.get() - 1
+                self.0.get() ^ $primitive::max_value()
             }
         }
 
@@ -91,14 +95,11 @@ macro_rules! non_max {
     };
 }
 
-// TODO: Signed values don't work with this technique, need to figure out a
-// different one!
-
-// non_max!(NonMaxI8, NonZeroI8, i8);
-// non_max!(NonMaxI16, NonZeroI16, i16);
-// non_max!(NonMaxI32, NonZeroI32, i32);
-// non_max!(NonMaxI64, NonZeroI64, i64);
-// non_max!(NonMaxISize, NonZeroIsize, isize);
+non_max!(NonMaxI8, NonZeroI8, i8);
+non_max!(NonMaxI16, NonZeroI16, i16);
+non_max!(NonMaxI32, NonZeroI32, i32);
+non_max!(NonMaxI64, NonZeroI64, i64);
+non_max!(NonMaxISize, NonZeroIsize, isize);
 
 non_max!(NonMaxU8, NonZeroU8, u8);
 non_max!(NonMaxU16, NonZeroU16, u16);
