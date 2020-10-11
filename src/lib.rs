@@ -14,11 +14,13 @@ standard library:
 * `NonMaxI16`
 * `NonMaxI32`
 * `NonMaxI64`
+* `NonMaxI128`
 * `NonMaxIsize`
 * `NonMaxU8`
 * `NonMaxU16`
 * `NonMaxU32`
 * `NonMaxU64`
+* `NonMaxU128`
 * `NonMaxUsize`
 
 ## Example
@@ -119,10 +121,12 @@ nonmax!(NonMaxI8, NonZeroI8, i8);
 nonmax!(NonMaxI16, NonZeroI16, i16);
 nonmax!(NonMaxI32, NonZeroI32, i32);
 nonmax!(NonMaxI64, NonZeroI64, i64);
+nonmax!(NonMaxI128, NonZeroI128, i128);
 nonmax!(NonMaxIsize, NonZeroIsize, isize);
 
 nonmax!(NonMaxU8, NonZeroU8, u8);
 nonmax!(NonMaxU16, NonZeroU16, u16);
 nonmax!(NonMaxU32, NonZeroU32, u32);
 nonmax!(NonMaxU64, NonZeroU64, u64);
+nonmax!(NonMaxU128, NonZeroU128, u128);
 nonmax!(NonMaxUsize, NonZeroUsize, usize);
