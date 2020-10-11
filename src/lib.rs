@@ -372,7 +372,6 @@ fn try_from_int_error_overflow() -> std::num::TryFromIntError {
     u8::try_from(999u32).unwrap_err()
 }
 
-
 #[cfg(test)]
 mod ops {
     use super::*;
