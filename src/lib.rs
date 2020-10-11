@@ -172,7 +172,7 @@ macro_rules! nonmax {
                 let some = $nonmax::new(19).unwrap();
                 let max1 = $nonmax::new($primitive::max_value() - 1).unwrap();
                 for value in [zero, some, max1].iter().copied() {
-                    assert_eq!(format!("{}",   value.get()), format!("{}",   value)); // Display
+                    assert_eq!(format!("{}", value.get()), format!("{}", value)); // Display
                     assert_eq!(format!("{:?}", value.get()), format!("{:?}", value)); // Debug
                     assert_eq!(format!("{:b}", value.get()), format!("{:b}", value)); // Binary
                     assert_eq!(format!("{:o}", value.get()), format!("{:o}", value)); // Octal
@@ -379,9 +379,9 @@ mod ops {
 
     #[test]
     fn bitand_unsigned() {
-        for left in 0 ..= 255 {
+        for left in 0..=255 {
             let nmleft = NonMaxU8::new(left);
-            for right in 0 ..= 255 {
+            for right in 0..=255 {
                 let nmright = NonMaxU8::new(right);
                 let vanilla = left & right;
 
@@ -400,9 +400,9 @@ mod ops {
 
     #[test]
     fn bitand_signed() {
-        for left in -128 ..= 127 {
+        for left in -128..=127 {
             let nmleft = NonMaxI8::new(left);
-            for right in -128 ..= 127 {
+            for right in -128..=127 {
                 let nmright = NonMaxI8::new(right);
                 let vanilla = left & right;
                 if let (Some(nmleft), Some(nmright)) = (nmleft, nmright) {
