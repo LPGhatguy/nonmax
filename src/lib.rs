@@ -269,22 +269,27 @@ macro_rules! impl_nonmax_from {
 impl_nonmax_from!(NonMaxU8, NonMaxU16);
 impl_nonmax_from!(NonMaxU8, NonMaxU32);
 impl_nonmax_from!(NonMaxU8, NonMaxU64);
+impl_nonmax_from!(NonMaxU8, NonMaxUsize);
 impl_nonmax_from!(NonMaxU16, NonMaxU32);
 impl_nonmax_from!(NonMaxU16, NonMaxU64);
+impl_nonmax_from!(NonMaxU16, NonMaxUsize);
 impl_nonmax_from!(NonMaxU32, NonMaxU64);
 
 // Non-max Signed -> Non-max Signed
 impl_nonmax_from!(NonMaxI8, NonMaxI16);
 impl_nonmax_from!(NonMaxI8, NonMaxI32);
 impl_nonmax_from!(NonMaxI8, NonMaxI64);
+impl_nonmax_from!(NonMaxI8, NonMaxIsize);
 impl_nonmax_from!(NonMaxI16, NonMaxI32);
 impl_nonmax_from!(NonMaxI16, NonMaxI64);
+impl_nonmax_from!(NonMaxI16, NonMaxIsize);
 impl_nonmax_from!(NonMaxI32, NonMaxI64);
 
 // Non-max Unsigned -> Non-max Signed
 impl_nonmax_from!(NonMaxU8, NonMaxI16);
 impl_nonmax_from!(NonMaxU8, NonMaxI32);
 impl_nonmax_from!(NonMaxU8, NonMaxI64);
+impl_nonmax_from!(NonMaxU8, NonMaxIsize);
 impl_nonmax_from!(NonMaxU16, NonMaxI32);
 impl_nonmax_from!(NonMaxU16, NonMaxI64);
 impl_nonmax_from!(NonMaxU32, NonMaxI64);
@@ -306,22 +311,27 @@ macro_rules! impl_smaller_from {
 impl_smaller_from!(u8, NonMaxU16);
 impl_smaller_from!(u8, NonMaxU32);
 impl_smaller_from!(u8, NonMaxU64);
+impl_smaller_from!(u8, NonMaxUsize);
 impl_smaller_from!(u16, NonMaxU32);
 impl_smaller_from!(u16, NonMaxU64);
+impl_smaller_from!(u16, NonMaxUsize);
 impl_smaller_from!(u32, NonMaxU64);
 
 // Signed -> Non-max Signed
 impl_smaller_from!(i8, NonMaxI16);
 impl_smaller_from!(i8, NonMaxI32);
 impl_smaller_from!(i8, NonMaxI64);
+impl_smaller_from!(i8, NonMaxIsize);
 impl_smaller_from!(i16, NonMaxI32);
 impl_smaller_from!(i16, NonMaxI64);
+impl_smaller_from!(i16, NonMaxIsize);
 impl_smaller_from!(i32, NonMaxI64);
 
 // Unsigned -> Non-max Signed
 impl_smaller_from!(u8, NonMaxI16);
 impl_smaller_from!(u8, NonMaxI32);
 impl_smaller_from!(u8, NonMaxI64);
+impl_smaller_from!(u8, NonMaxIsize);
 impl_smaller_from!(u16, NonMaxI32);
 impl_smaller_from!(u16, NonMaxI64);
 impl_smaller_from!(u32, NonMaxI64);
