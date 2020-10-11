@@ -2,6 +2,7 @@
 
 ## Unreleased Changes
 * Raised MSRV to 1.47.0 to reduce `unsafe` by using `NonZero*::new`
+* Implement a bunch of traits that NonZero had but NonMax was missing
 
 ## 0.4.0 (2020-09-27)
 * Raised MSRV to 1.46.0 to make more methods `const`.
