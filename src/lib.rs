@@ -244,12 +244,14 @@ nonmax!(signed, NonMaxI8, NonZeroI8, i8);
 nonmax!(signed, NonMaxI16, NonZeroI16, i16);
 nonmax!(signed, NonMaxI32, NonZeroI32, i32);
 nonmax!(signed, NonMaxI64, NonZeroI64, i64);
+nonmax!(signed, NonMaxI128, NonZeroI128, i128);
 nonmax!(signed, NonMaxIsize, NonZeroIsize, isize);
 
 nonmax!(unsigned, NonMaxU8, NonZeroU8, u8);
 nonmax!(unsigned, NonMaxU16, NonZeroU16, u16);
 nonmax!(unsigned, NonMaxU32, NonZeroU32, u32);
 nonmax!(unsigned, NonMaxU64, NonZeroU64, u64);
+nonmax!(unsigned, NonMaxU128, NonZeroU128, u128);
 nonmax!(unsigned, NonMaxUsize, NonZeroUsize, usize);
 
 // https://doc.rust-lang.org/stable/src/core/convert/num.rs.html#383-407
@@ -269,30 +271,42 @@ macro_rules! impl_nonmax_from {
 impl_nonmax_from!(NonMaxU8, NonMaxU16);
 impl_nonmax_from!(NonMaxU8, NonMaxU32);
 impl_nonmax_from!(NonMaxU8, NonMaxU64);
+impl_nonmax_from!(NonMaxU8, NonMaxU128);
 impl_nonmax_from!(NonMaxU8, NonMaxUsize);
 impl_nonmax_from!(NonMaxU16, NonMaxU32);
 impl_nonmax_from!(NonMaxU16, NonMaxU64);
+impl_nonmax_from!(NonMaxU16, NonMaxU128);
 impl_nonmax_from!(NonMaxU16, NonMaxUsize);
 impl_nonmax_from!(NonMaxU32, NonMaxU64);
+impl_nonmax_from!(NonMaxU32, NonMaxU128);
+impl_nonmax_from!(NonMaxU64, NonMaxU128);
 
 // Non-max Signed -> Non-max Signed
 impl_nonmax_from!(NonMaxI8, NonMaxI16);
 impl_nonmax_from!(NonMaxI8, NonMaxI32);
 impl_nonmax_from!(NonMaxI8, NonMaxI64);
+impl_nonmax_from!(NonMaxI8, NonMaxI128);
 impl_nonmax_from!(NonMaxI8, NonMaxIsize);
 impl_nonmax_from!(NonMaxI16, NonMaxI32);
 impl_nonmax_from!(NonMaxI16, NonMaxI64);
+impl_nonmax_from!(NonMaxI16, NonMaxI128);
 impl_nonmax_from!(NonMaxI16, NonMaxIsize);
 impl_nonmax_from!(NonMaxI32, NonMaxI64);
+impl_nonmax_from!(NonMaxI32, NonMaxI128);
+impl_nonmax_from!(NonMaxI64, NonMaxI128);
 
 // Non-max Unsigned -> Non-max Signed
 impl_nonmax_from!(NonMaxU8, NonMaxI16);
 impl_nonmax_from!(NonMaxU8, NonMaxI32);
 impl_nonmax_from!(NonMaxU8, NonMaxI64);
+impl_nonmax_from!(NonMaxU8, NonMaxI128);
 impl_nonmax_from!(NonMaxU8, NonMaxIsize);
 impl_nonmax_from!(NonMaxU16, NonMaxI32);
 impl_nonmax_from!(NonMaxU16, NonMaxI64);
+impl_nonmax_from!(NonMaxU16, NonMaxI128);
 impl_nonmax_from!(NonMaxU32, NonMaxI64);
+impl_nonmax_from!(NonMaxU32, NonMaxI128);
+impl_nonmax_from!(NonMaxU64, NonMaxI128);
 
 // https://doc.rust-lang.org/stable/src/core/convert/num.rs.html#383-407
 macro_rules! impl_smaller_from {
@@ -311,30 +325,42 @@ macro_rules! impl_smaller_from {
 impl_smaller_from!(u8, NonMaxU16);
 impl_smaller_from!(u8, NonMaxU32);
 impl_smaller_from!(u8, NonMaxU64);
+impl_smaller_from!(u8, NonMaxU128);
 impl_smaller_from!(u8, NonMaxUsize);
 impl_smaller_from!(u16, NonMaxU32);
 impl_smaller_from!(u16, NonMaxU64);
+impl_smaller_from!(u16, NonMaxU128);
 impl_smaller_from!(u16, NonMaxUsize);
 impl_smaller_from!(u32, NonMaxU64);
+impl_smaller_from!(u32, NonMaxU128);
+impl_smaller_from!(u64, NonMaxU128);
 
 // Signed -> Non-max Signed
 impl_smaller_from!(i8, NonMaxI16);
 impl_smaller_from!(i8, NonMaxI32);
 impl_smaller_from!(i8, NonMaxI64);
+impl_smaller_from!(i8, NonMaxI128);
 impl_smaller_from!(i8, NonMaxIsize);
 impl_smaller_from!(i16, NonMaxI32);
 impl_smaller_from!(i16, NonMaxI64);
+impl_smaller_from!(i16, NonMaxI128);
 impl_smaller_from!(i16, NonMaxIsize);
 impl_smaller_from!(i32, NonMaxI64);
+impl_smaller_from!(i32, NonMaxI128);
+impl_smaller_from!(i64, NonMaxI128);
 
 // Unsigned -> Non-max Signed
 impl_smaller_from!(u8, NonMaxI16);
 impl_smaller_from!(u8, NonMaxI32);
 impl_smaller_from!(u8, NonMaxI64);
+impl_smaller_from!(u8, NonMaxI128);
 impl_smaller_from!(u8, NonMaxIsize);
 impl_smaller_from!(u16, NonMaxI32);
 impl_smaller_from!(u16, NonMaxI64);
+impl_smaller_from!(u16, NonMaxI128);
 impl_smaller_from!(u32, NonMaxI64);
+impl_smaller_from!(u32, NonMaxI128);
+impl_smaller_from!(u64, NonMaxI128);
 
 fn parse_int_error_overflow() -> std::num::ParseIntError {
     use std::str::FromStr;
