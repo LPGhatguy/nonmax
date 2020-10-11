@@ -1,6 +1,7 @@
 # nonmax Changelog
 
 ## Unreleased Changes
+* Added `NonMaxI128` and `NonMaxU128` support
 
 ## 0.4.0 (2020-09-27)
 * Raised MSRV to 1.46.0 to make more methods `const`.
