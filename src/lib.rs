@@ -40,7 +40,7 @@ assert_eq!(oops, None);
 
 ## Minimum Supported Rust Version (MSRV)
 
-nonmax supports Rust 1.46.0 and newer. Until this library reaches 1.0,
+nonmax supports Rust 1.47.0 and newer. Until this library reaches 1.0,
 changes to the MSRV will require major version bumps. After 1.0, MSRV changes
 will only require minor version bumps, but will need significant justification.
 */
@@ -59,13 +59,10 @@ macro_rules! nonmax {
             /// value.
             #[inline]
             pub const fn new(value: $primitive) -> Option<Self> {
-                if value == $primitive::max_value() {
-                    None
+                if let Some(v) = std::num::$non_zero::new(value ^ $primitive::max_value()) {
+                    Some(Self(v))
                 } else {
-                    let inner = unsafe {
-                        std::num::$non_zero::new_unchecked(value ^ $primitive::max_value())
-                    };
-                    Some(Self(inner))
+                    None
                 }
             }
 

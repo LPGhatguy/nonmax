@@ -1,6 +1,7 @@
 # nonmax Changelog
 
 ## Unreleased Changes
+* Raised MSRV to 1.47.0 to reduce `unsafe` by using `NonZero*::new`
 
 ## 0.4.0 (2020-09-27)
 * Raised MSRV to 1.46.0 to make more methods `const`.
