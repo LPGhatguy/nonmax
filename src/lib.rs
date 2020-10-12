@@ -49,6 +49,32 @@ will only require minor version bumps, but will need significant justification.
 
 #![forbid(missing_docs)]
 
+/// An error type returned when a checked integral type conversion fails (mimics [std::num::TryFromIntError])
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TryFromIntError(());
+
+impl std::fmt::Display for TryFromIntError {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        "out of range integral type conversion attempted".fmt(fmt)
+    }
+}
+
+impl From<std::num::TryFromIntError> for TryFromIntError {
+    fn from(_: std::num::TryFromIntError) -> Self {
+        Self(())
+    }
+}
+
+impl From<std::convert::Infallible> for TryFromIntError {
+    fn from(never: std::convert::Infallible) -> Self {
+        match never {}
+    }
+}
+
+// error[E0658]: the `!` type is experimental
+// https://github.com/rust-lang/rust/issues/35121
+// impl From<!> for TryFromIntError { ... }
+
 macro_rules! nonmax {
     ( $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
         /// An integer that is known not to equal its maximum value.
@@ -97,9 +123,9 @@ macro_rules! nonmax {
         }
 
         impl std::convert::TryFrom<$primitive> for $nonmax {
-            type Error = std::num::TryFromIntError;
+            type Error = TryFromIntError;
             fn try_from(value: $primitive) -> Result<Self, Self::Error> {
-                Self::new(value).ok_or_else(try_from_int_error_overflow)
+                Self::new(value).ok_or(TryFromIntError(()))
             }
         }
 
@@ -138,12 +164,6 @@ macro_rules! nonmax {
             }
         }
     };
-}
-
-fn try_from_int_error_overflow() -> std::num::TryFromIntError {
-    // Why yes, we *do* need to resort to this ugliness just to create a TryFromIntError!
-    use std::convert::TryFrom;
-    u8::try_from(999u32).unwrap_err() // infalliable
 }
 
 nonmax!(NonMaxI8, NonZeroI8, i8);
