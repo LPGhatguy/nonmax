@@ -160,13 +160,13 @@ nonmax!(NonMaxU64, NonZeroU64, u64);
 nonmax!(NonMaxU128, NonZeroU128, u128);
 nonmax!(NonMaxUsize, NonZeroUsize, usize);
 
-// https://doc.rust-lang.org/stable/src/core/convert/num.rs.html#383-407
+// https://doc.rust-lang.org/1.47.0/src/core/convert/num.rs.html#383-407
 macro_rules! impl_nonmax_from {
     ( $small: ty, $large: ty ) => {
         impl From<$small> for $large {
             #[inline]
             fn from(small: $small) -> Self {
-                // SAFETY: smaller input type guarantees the value is non-zero
+                // SAFETY: smaller input type guarantees the value is non-max
                 unsafe { Self::new_unchecked(small.get().into()) }
             }
         }
@@ -214,13 +214,13 @@ impl_nonmax_from!(NonMaxU32, NonMaxI64);
 impl_nonmax_from!(NonMaxU32, NonMaxI128);
 impl_nonmax_from!(NonMaxU64, NonMaxI128);
 
-// https://doc.rust-lang.org/stable/src/core/convert/num.rs.html#383-407
+// https://doc.rust-lang.org/1.47.0/src/core/convert/num.rs.html#383-407
 macro_rules! impl_smaller_from {
     ( $small: ty, $large: ty ) => {
         impl From<$small> for $large {
             #[inline]
             fn from(small: $small) -> Self {
-                // SAFETY: smaller input type guarantees the value is non-zero
+                // SAFETY: smaller input type guarantees the value is non-max
                 unsafe { Self::new_unchecked(small.into()) }
             }
         }
