@@ -75,10 +75,24 @@ impl From<std::convert::Infallible> for TryFromIntError {
 // https://github.com/rust-lang/rust/issues/35121
 // impl From<!> for TryFromIntError { ... }
 
+// https://doc.rust-lang.org/1.47.0/src/core/num/mod.rs.html#31-43
+macro_rules! impl_nonmax_fmt {
+    ( ( $( $Trait: ident ),+ ) for $nonmax: ident ) => {
+        $(
+            impl std::fmt::$Trait for $nonmax {
+                #[inline]
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    std::fmt::$Trait::fmt(&self.get(), f)
+                }
+            }
+        )+
+    };
+}
+
 macro_rules! nonmax {
     ( $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
         /// An integer that is known not to equal its maximum value.
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
         #[repr(transparent)]
         pub struct $nonmax(std::num::$non_zero);
 
@@ -129,6 +143,11 @@ macro_rules! nonmax {
             }
         }
 
+        // https://doc.rust-lang.org/1.47.0/src/core/num/mod.rs.html#173-175
+        impl_nonmax_fmt! {
+            (Debug, Display, Binary, Octal, LowerHex, UpperHex) for $nonmax
+        }
+
         #[cfg(test)]
         mod $primitive {
             use super::*;
@@ -161,6 +180,21 @@ macro_rules! nonmax {
                 assert_eq!(zero, 0);
 
                 $nonmax::try_from($primitive::max_value()).unwrap_err();
+            }
+
+            #[test]
+            fn fmt() {
+                let zero = $nonmax::new(0).unwrap();
+                let some = $nonmax::new(19).unwrap();
+                let max1 = $nonmax::new($primitive::max_value() - 1).unwrap();
+                for value in [zero, some, max1].iter().copied() {
+                    assert_eq!(format!("{}", value.get()), format!("{}", value)); // Display
+                    assert_eq!(format!("{:?}", value.get()), format!("{:?}", value)); // Debug
+                    assert_eq!(format!("{:b}", value.get()), format!("{:b}", value)); // Binary
+                    assert_eq!(format!("{:o}", value.get()), format!("{:o}", value)); // Octal
+                    assert_eq!(format!("{:x}", value.get()), format!("{:x}", value)); // LowerHex
+                    assert_eq!(format!("{:X}", value.get()), format!("{:X}", value)); // UpperHex
+                }
             }
         }
     };
