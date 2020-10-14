@@ -71,6 +71,22 @@ impl From<std::convert::Infallible> for TryFromIntError {
     }
 }
 
+/// An error type returned when an integer cannot be parsed (mimics [std::num::ParseIntError])
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ParseIntError(());
+
+impl std::fmt::Display for ParseIntError {
+    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+        "unable to parse integer".fmt(fmt)
+    }
+}
+
+impl From<std::num::ParseIntError> for ParseIntError {
+    fn from(_: std::num::ParseIntError) -> Self {
+        Self(())
+    }
+}
+
 // error[E0658]: the `!` type is experimental
 // https://github.com/rust-lang/rust/issues/35121
 // impl From<!> for TryFromIntError { ... }
@@ -143,6 +159,13 @@ macro_rules! nonmax {
             }
         }
 
+        impl std::str::FromStr for $nonmax {
+            type Err = ParseIntError;
+            fn from_str(value: &str) -> Result<Self, Self::Err> {
+                Self::new($primitive::from_str(value)?).ok_or(ParseIntError(()))
+            }
+        }
+
         // https://doc.rust-lang.org/1.47.0/src/core/num/mod.rs.html#173-175
         impl_nonmax_fmt! {
             (Debug, Display, Binary, Octal, LowerHex, UpperHex) for $nonmax
@@ -180,6 +203,19 @@ macro_rules! nonmax {
                 assert_eq!(zero, 0);
 
                 $nonmax::try_from($primitive::max_value()).unwrap_err();
+            }
+
+            #[test]
+            fn parse() {
+                for value in [0, 19, $primitive::max_value() - 1].iter().copied() {
+                    let string = value.to_string();
+                    let nonmax = string.parse::<$nonmax>().unwrap();
+                    assert_eq!(nonmax.get(), value);
+                }
+                $primitive::max_value()
+                    .to_string()
+                    .parse::<$nonmax>()
+                    .unwrap_err();
             }
 
             #[test]
