@@ -53,6 +53,8 @@ will only require minor version bumps, but will need significant justification.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TryFromIntError(());
 
+impl std::error::Error for TryFromIntError {}
+
 impl std::fmt::Display for TryFromIntError {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         "out of range integral type conversion attempted".fmt(fmt)
@@ -74,6 +76,8 @@ impl From<std::convert::Infallible> for TryFromIntError {
 /// An error type returned when an integer cannot be parsed (mimics [std::num::ParseIntError])
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ParseIntError(());
+
+impl std::error::Error for ParseIntError {}
 
 impl std::fmt::Display for ParseIntError {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
