@@ -106,7 +106,7 @@ macro_rules! impl_nonmax_fmt {
 }
 
 macro_rules! nonmax {
-    ( $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
+    ( common, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
         /// An integer that is known not to equal its maximum value.
         #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
         #[repr(transparent)]
@@ -163,6 +163,25 @@ macro_rules! nonmax {
             type Err = ParseIntError;
             fn from_str(value: &str) -> Result<Self, Self::Err> {
                 Self::new($primitive::from_str(value)?).ok_or(ParseIntError(()))
+            }
+        }
+
+        // NonZero can implement BitOr (will never 0 a nonzero value) but not BitAnd.
+        // NonMax can implement BitAnd but not BitOr, with some caveats for signed values:
+        // -1 (11...11) & max (01...11) can result in signed max (01...11), so both operands must be nonmax for signed variants
+
+        impl std::ops::BitAnd<$nonmax> for $nonmax {
+            type Output = $nonmax;
+            fn bitand(self, rhs: $nonmax) -> Self::Output {
+                // Safety: since `rhs` is non-max, the result of the
+                // bitwise-and will be non-max regardless of the value of `self`
+                unsafe { $nonmax::new_unchecked(self.get() & rhs.get()) }
+            }
+        }
+
+        impl std::ops::BitAndAssign<$nonmax> for $nonmax {
+            fn bitand_assign(&mut self, rhs: $nonmax) {
+                *self = *self & rhs;
             }
         }
 
@@ -234,21 +253,61 @@ macro_rules! nonmax {
             }
         }
     };
+
+    ( signed, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
+        nonmax!(common, $nonmax, $non_zero, $primitive);
+        // Nothing unique to signed versions (yet)
+    };
+
+    ( unsigned, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
+        nonmax!(common, $nonmax, $non_zero, $primitive);
+
+        impl std::ops::BitAnd<$nonmax> for $primitive {
+            type Output = $nonmax;
+            fn bitand(self, rhs: $nonmax) -> Self::Output {
+                // Safety: since `rhs` is non-max, the result of the
+                // bitwise-and will be non-max regardless of the value of `self`
+                unsafe { $nonmax::new_unchecked(self & rhs.get()) }
+            }
+        }
+
+        impl std::ops::BitAnd<$primitive> for $nonmax {
+            type Output = $nonmax;
+            fn bitand(self, rhs: $primitive) -> Self::Output {
+                // Safety: since `self` is non-max, the result of the
+                // bitwise-and will be non-max regardless of the value of `rhs`
+                unsafe { $nonmax::new_unchecked(self.get() & rhs) }
+            }
+        }
+
+        impl std::ops::BitAndAssign<$primitive> for $nonmax {
+            fn bitand_assign(&mut self, rhs: $primitive) {
+                *self = *self & rhs;
+            }
+        }
+
+        // std doesn't have an equivalent BitAndOr for $nonzero, but this just makes sense
+        impl std::ops::BitAndAssign<$nonmax> for $primitive {
+            fn bitand_assign(&mut self, rhs: $nonmax) {
+                *self = *self & rhs.get();
+            }
+        }
+    };
 }
 
-nonmax!(NonMaxI8, NonZeroI8, i8);
-nonmax!(NonMaxI16, NonZeroI16, i16);
-nonmax!(NonMaxI32, NonZeroI32, i32);
-nonmax!(NonMaxI64, NonZeroI64, i64);
-nonmax!(NonMaxI128, NonZeroI128, i128);
-nonmax!(NonMaxIsize, NonZeroIsize, isize);
+nonmax!(signed, NonMaxI8, NonZeroI8, i8);
+nonmax!(signed, NonMaxI16, NonZeroI16, i16);
+nonmax!(signed, NonMaxI32, NonZeroI32, i32);
+nonmax!(signed, NonMaxI64, NonZeroI64, i64);
+nonmax!(signed, NonMaxI128, NonZeroI128, i128);
+nonmax!(signed, NonMaxIsize, NonZeroIsize, isize);
 
-nonmax!(NonMaxU8, NonZeroU8, u8);
-nonmax!(NonMaxU16, NonZeroU16, u16);
-nonmax!(NonMaxU32, NonZeroU32, u32);
-nonmax!(NonMaxU64, NonZeroU64, u64);
-nonmax!(NonMaxU128, NonZeroU128, u128);
-nonmax!(NonMaxUsize, NonZeroUsize, usize);
+nonmax!(unsigned, NonMaxU8, NonZeroU8, u8);
+nonmax!(unsigned, NonMaxU16, NonZeroU16, u16);
+nonmax!(unsigned, NonMaxU32, NonZeroU32, u32);
+nonmax!(unsigned, NonMaxU64, NonZeroU64, u64);
+nonmax!(unsigned, NonMaxU128, NonZeroU128, u128);
+nonmax!(unsigned, NonMaxUsize, NonZeroUsize, usize);
 
 // https://doc.rust-lang.org/1.47.0/src/core/convert/num.rs.html#383-407
 macro_rules! impl_nonmax_from {
@@ -357,3 +416,43 @@ impl_smaller_from!(u16, NonMaxI128);
 impl_smaller_from!(u32, NonMaxI64);
 impl_smaller_from!(u32, NonMaxI128);
 impl_smaller_from!(u64, NonMaxI128);
+
+#[cfg(test)]
+mod ops {
+    use super::*;
+
+    #[test]
+    fn bitand_unsigned() {
+        for left in 0..=u8::MAX {
+            let nmleft = NonMaxU8::new(left);
+            for right in 0..=u8::MAX {
+                let nmright = NonMaxU8::new(right);
+                let vanilla = left & right;
+
+                if let (Some(nmleft), Some(nmright)) = (nmleft, nmright) {
+                    assert_eq!(vanilla, (nmleft & nmright).get());
+                }
+                if let Some(nmleft) = nmleft {
+                    assert_eq!(vanilla, (nmleft & right).get());
+                }
+                if let Some(nmright) = nmright {
+                    assert_eq!(vanilla, (left & nmright).get());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn bitand_signed() {
+        for left in i8::MIN..=i8::MAX {
+            let nmleft = NonMaxI8::new(left);
+            for right in i8::MIN..=i8::MAX {
+                let nmright = NonMaxI8::new(right);
+                let vanilla = left & right;
+                if let (Some(nmleft), Some(nmright)) = (nmleft, nmright) {
+                    assert_eq!(vanilla, (nmleft & nmright).get());
+                }
+            }
+        }
+    }
+}
