@@ -6,6 +6,7 @@
 * Implemented `std::fmt::{Display, Binary, Octal, LowerHex, UpperHex}` to match `NonZero*`
 * Removed outer "NonMax(...)" in output from `impl Debug for NonMax*`, matching `NonZero*` behavior
 * Implemented `std::str::FromStr` for `NonMax*` to match `NonZero*`
+* Implemented `std::ops::BitAnd[Assign]` for `NonMax*`, similar to `BitOr[Assign]` for `NonZero*`
 
 ## 0.4.0 (2020-09-27)
 * Raised MSRV to 1.46.0 to make more methods `const`.
