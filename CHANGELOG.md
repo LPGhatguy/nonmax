@@ -7,6 +7,7 @@
 * Removed outer "NonMax(...)" in output from `impl Debug for NonMax*`, matching `NonZero*` behavior
 * Implemented `std::str::FromStr` for `NonMax*` to match `NonZero*`
 * Implemented `std::ops::BitAnd[Assign]` for `NonMax*`, similar to `BitOr[Assign]` for `NonZero*`
+* Added `no_std` support
 
 ## 0.4.0 (2020-09-27)
 * Raised MSRV to 1.46.0 to make more methods `const`.
