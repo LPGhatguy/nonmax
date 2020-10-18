@@ -40,6 +40,10 @@ let oops = NonMaxU8::new(255);
 assert_eq!(oops, None);
 ```
 
+## Features
+
+`std` (default) - implements [`std::error::Error`] for [`ParseIntError`], [`TryFromIntError`].  Disable for [`#![no_std]`](https://rust-embedded.github.io/book/intro/no-std.html) support.
+
 ## Minimum Supported Rust Version (MSRV)
 
 nonmax supports Rust 1.46.0 and newer. Until this library reaches 1.0,
@@ -48,27 +52,29 @@ will only require minor version bumps, but will need significant justification.
 */
 
 #![forbid(missing_docs)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 /// An error type returned when a checked integral type conversion fails (mimics [std::num::TryFromIntError])
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TryFromIntError(());
 
+#[cfg(feature = "std")]
 impl std::error::Error for TryFromIntError {}
 
-impl std::fmt::Display for TryFromIntError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for TryFromIntError {
+    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::fmt::Result {
         "out of range integral type conversion attempted".fmt(fmt)
     }
 }
 
-impl From<std::num::TryFromIntError> for TryFromIntError {
-    fn from(_: std::num::TryFromIntError) -> Self {
+impl From<core::num::TryFromIntError> for TryFromIntError {
+    fn from(_: core::num::TryFromIntError) -> Self {
         Self(())
     }
 }
 
-impl From<std::convert::Infallible> for TryFromIntError {
-    fn from(never: std::convert::Infallible) -> Self {
+impl From<core::convert::Infallible> for TryFromIntError {
+    fn from(never: core::convert::Infallible) -> Self {
         match never {}
     }
 }
@@ -77,16 +83,17 @@ impl From<std::convert::Infallible> for TryFromIntError {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ParseIntError(());
 
+#[cfg(feature = "std")]
 impl std::error::Error for ParseIntError {}
 
-impl std::fmt::Display for ParseIntError {
-    fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl core::fmt::Display for ParseIntError {
+    fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::fmt::Result {
         "unable to parse integer".fmt(fmt)
     }
 }
 
-impl From<std::num::ParseIntError> for ParseIntError {
-    fn from(_: std::num::ParseIntError) -> Self {
+impl From<core::num::ParseIntError> for ParseIntError {
+    fn from(_: core::num::ParseIntError) -> Self {
         Self(())
     }
 }
@@ -99,10 +106,10 @@ impl From<std::num::ParseIntError> for ParseIntError {
 macro_rules! impl_nonmax_fmt {
     ( ( $( $Trait: ident ),+ ) for $nonmax: ident ) => {
         $(
-            impl std::fmt::$Trait for $nonmax {
+            impl core::fmt::$Trait for $nonmax {
                 #[inline]
-                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                    std::fmt::$Trait::fmt(&self.get(), f)
+                fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                    core::fmt::$Trait::fmt(&self.get(), f)
                 }
             }
         )+
@@ -114,7 +121,7 @@ macro_rules! nonmax {
         /// An integer that is known not to equal its maximum value.
         #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
         #[repr(transparent)]
-        pub struct $nonmax(std::num::$non_zero);
+        pub struct $nonmax(core::num::$non_zero);
 
         impl $nonmax {
             /// Creates a new non-max if the given value is not the maximum
@@ -125,7 +132,7 @@ macro_rules! nonmax {
                     None
                 } else {
                     let inner = unsafe {
-                        std::num::$non_zero::new_unchecked(value ^ $primitive::max_value())
+                        core::num::$non_zero::new_unchecked(value ^ $primitive::max_value())
                     };
                     Some(Self(inner))
                 }
@@ -139,7 +146,7 @@ macro_rules! nonmax {
             /// primitive type.
             #[inline]
             pub const unsafe fn new_unchecked(value: $primitive) -> Self {
-                let inner = std::num::$non_zero::new_unchecked(value ^ $primitive::max_value());
+                let inner = core::num::$non_zero::new_unchecked(value ^ $primitive::max_value());
                 Self(inner)
             }
 
@@ -156,14 +163,14 @@ macro_rules! nonmax {
             }
         }
 
-        impl std::convert::TryFrom<$primitive> for $nonmax {
+        impl core::convert::TryFrom<$primitive> for $nonmax {
             type Error = TryFromIntError;
             fn try_from(value: $primitive) -> Result<Self, Self::Error> {
                 Self::new(value).ok_or(TryFromIntError(()))
             }
         }
 
-        impl std::str::FromStr for $nonmax {
+        impl core::str::FromStr for $nonmax {
             type Err = ParseIntError;
             fn from_str(value: &str) -> Result<Self, Self::Err> {
                 Self::new($primitive::from_str(value)?).ok_or(ParseIntError(()))
@@ -174,7 +181,7 @@ macro_rules! nonmax {
         // NonMax can implement BitAnd but not BitOr, with some caveats for signed values:
         // -1 (11...11) & max (01...11) can result in signed max (01...11), so both operands must be nonmax for signed variants
 
-        impl std::ops::BitAnd<$nonmax> for $nonmax {
+        impl core::ops::BitAnd<$nonmax> for $nonmax {
             type Output = $nonmax;
             fn bitand(self, rhs: $nonmax) -> Self::Output {
                 // Safety: since `rhs` is non-max, the result of the
@@ -183,7 +190,7 @@ macro_rules! nonmax {
             }
         }
 
-        impl std::ops::BitAndAssign<$nonmax> for $nonmax {
+        impl core::ops::BitAndAssign<$nonmax> for $nonmax {
             fn bitand_assign(&mut self, rhs: $nonmax) {
                 *self = *self & rhs;
             }
@@ -198,7 +205,7 @@ macro_rules! nonmax {
         mod $primitive {
             use super::*;
 
-            use std::mem::size_of;
+            use core::mem::size_of;
 
             #[test]
             fn construct() {
@@ -220,7 +227,7 @@ macro_rules! nonmax {
 
             #[test]
             fn convert() {
-                use std::convert::TryFrom;
+                use core::convert::TryFrom;
                 let zero = $nonmax::try_from(0 as $primitive).unwrap();
                 let zero = $primitive::from(zero);
                 assert_eq!(zero, 0);
@@ -229,6 +236,7 @@ macro_rules! nonmax {
             }
 
             #[test]
+            #[cfg(feature = "std")] // to_string
             fn parse() {
                 for value in [0, 19, $primitive::max_value() - 1].iter().copied() {
                     let string = value.to_string();
@@ -242,6 +250,7 @@ macro_rules! nonmax {
             }
 
             #[test]
+            #[cfg(feature = "std")] // format!
             fn fmt() {
                 let zero = $nonmax::new(0).unwrap();
                 let some = $nonmax::new(19).unwrap();
@@ -266,7 +275,7 @@ macro_rules! nonmax {
     ( unsigned, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
         nonmax!(common, $nonmax, $non_zero, $primitive);
 
-        impl std::ops::BitAnd<$nonmax> for $primitive {
+        impl core::ops::BitAnd<$nonmax> for $primitive {
             type Output = $nonmax;
             fn bitand(self, rhs: $nonmax) -> Self::Output {
                 // Safety: since `rhs` is non-max, the result of the
@@ -275,7 +284,7 @@ macro_rules! nonmax {
             }
         }
 
-        impl std::ops::BitAnd<$primitive> for $nonmax {
+        impl core::ops::BitAnd<$primitive> for $nonmax {
             type Output = $nonmax;
             fn bitand(self, rhs: $primitive) -> Self::Output {
                 // Safety: since `self` is non-max, the result of the
@@ -284,14 +293,14 @@ macro_rules! nonmax {
             }
         }
 
-        impl std::ops::BitAndAssign<$primitive> for $nonmax {
+        impl core::ops::BitAndAssign<$primitive> for $nonmax {
             fn bitand_assign(&mut self, rhs: $primitive) {
                 *self = *self & rhs;
             }
         }
 
         // std doesn't have an equivalent BitAndOr for $nonzero, but this just makes sense
-        impl std::ops::BitAndAssign<$nonmax> for $primitive {
+        impl core::ops::BitAndAssign<$nonmax> for $primitive {
             fn bitand_assign(&mut self, rhs: $nonmax) {
                 *self = *self & rhs.get();
             }
