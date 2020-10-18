@@ -40,6 +40,10 @@ let oops = NonMaxU8::new(255);
 assert_eq!(oops, None);
 ```
 
+## Features
+
+`std` (default) - implements [`std::error::Error`] for [`ParseIntError`], [`TryFromIntError`].  Disable for [`#![no_std]`](https://rust-embedded.github.io/book/intro/no-std.html) support.
+
 ## Minimum Supported Rust Version (MSRV)
 
 nonmax supports Rust 1.46.0 and newer. Until this library reaches 1.0,
