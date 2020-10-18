@@ -1,6 +1,7 @@
 # nonmax Changelog
 
 ## Unreleased Changes
+* Raised MSRV to 1.47.0 to eliminate `unsafe` in `new`.
 * Added `NonMaxI128` and `NonMaxU128` support
 * Implemented `std::convert::[Try]From` for `NonMax*` & primitive types to match `NonZero*`
 * Implemented `std::fmt::{Display, Binary, Octal, LowerHex, UpperHex}` to match `NonZero*`

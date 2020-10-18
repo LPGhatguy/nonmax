@@ -128,13 +128,9 @@ macro_rules! nonmax {
             /// value.
             #[inline]
             pub const fn new(value: $primitive) -> Option<Self> {
-                if value == $primitive::max_value() {
-                    None
-                } else {
-                    let inner = unsafe {
-                        core::num::$non_zero::new_unchecked(value ^ $primitive::max_value())
-                    };
-                    Some(Self(inner))
+                match core::num::$non_zero::new(value ^ $primitive::max_value()) {
+                    None => None,
+                    Some(value) => Some(Self(value)),
                 }
             }
 
