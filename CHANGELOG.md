@@ -1,6 +1,8 @@
 # nonmax Changelog
 
 ## Unreleased Changes
+
+## 0.5.0 (2020-10-18)
 * Raised MSRV to 1.47.0 to eliminate `unsafe` in `new`.
 * Added `NonMaxI128` and `NonMaxU128`.
 * Implemented `std::convert::[Try]From` for `NonMax*` and primitive types to match `NonZero*`.
