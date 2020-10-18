@@ -30,11 +30,11 @@ use nonmax::{NonMaxI16, NonMaxU8};
 
 let value = NonMaxU8::new(16).expect("16 should definitely fit in a u8");
 assert_eq!(value.get(), 16);
-assert_eq!(core::mem::size_of_val(&value), 1);
+assert_eq!(std::mem::size_of_val(&value), 1);
 
 let signed = NonMaxI16::new(i16::min_value()).expect("minimum values are fine");
 assert_eq!(signed.get(), i16::min_value());
-assert_eq!(core::mem::size_of_val(&signed), 2);
+assert_eq!(std::mem::size_of_val(&signed), 2);
 
 let oops = NonMaxU8::new(255);
 assert_eq!(oops, None);
@@ -50,7 +50,7 @@ will only require minor version bumps, but will need significant justification.
 #![forbid(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
-/// An error type returned when a checked integral type conversion fails (mimics [core::num::TryFromIntError])
+/// An error type returned when a checked integral type conversion fails (mimics [std::num::TryFromIntError])
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TryFromIntError(());
 
@@ -75,7 +75,7 @@ impl From<core::convert::Infallible> for TryFromIntError {
     }
 }
 
-/// An error type returned when an integer cannot be parsed (mimics [core::num::ParseIntError])
+/// An error type returned when an integer cannot be parsed (mimics [std::num::ParseIntError])
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ParseIntError(());
 
