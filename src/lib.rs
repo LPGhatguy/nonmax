@@ -42,11 +42,13 @@ assert_eq!(oops, None);
 
 ## Features
 
-`std` (default) - implements [`std::error::Error`] for [`ParseIntError`], [`TryFromIntError`].  Disable for [`#![no_std]`](https://rust-embedded.github.io/book/intro/no-std.html) support.
+* `std` (default): implements [`std::error::Error`] for [`ParseIntError`] and
+[`TryFromIntError`]. Disable this feature for
+[`#![no_std]`](https://rust-embedded.github.io/book/intro/no-std.html) support.
 
 ## Minimum Supported Rust Version (MSRV)
 
-nonmax supports Rust 1.46.0 and newer. Until this library reaches 1.0,
+nonmax supports Rust 1.47.0 and newer. Until this library reaches 1.0,
 changes to the MSRV will require major version bumps. After 1.0, MSRV changes
 will only require minor version bumps, but will need significant justification.
 */
