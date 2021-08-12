@@ -155,6 +155,12 @@ macro_rules! nonmax {
             }
         }
 
+        impl Default for $nonmax {
+            fn default() -> Self {
+                unsafe { Self::new_unchecked(0) }
+            }
+        }
+
         impl From<$nonmax> for $primitive {
             fn from(value: $nonmax) -> Self {
                 value.get()
