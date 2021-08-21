@@ -1,6 +1,7 @@
 # nonmax Changelog
 
 ## Unreleased Changes
+* Implemented `Default` for `NonMax*`.
 
 ## 0.5.0 (2020-10-18)
 * Raised MSRV to 1.47.0 to eliminate `unsafe` in `new`.

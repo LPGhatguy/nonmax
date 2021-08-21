@@ -130,7 +130,7 @@ macro_rules! nonmax {
             /// value.
             #[inline]
             pub const fn new(value: $primitive) -> Option<Self> {
-                match core::num::$non_zero::new(value ^ $primitive::max_value()) {
+                match core::num::$non_zero::new(value ^ $primitive::MAX) {
                     None => None,
                     Some(value) => Some(Self(value)),
                 }
@@ -144,14 +144,20 @@ macro_rules! nonmax {
             /// primitive type.
             #[inline]
             pub const unsafe fn new_unchecked(value: $primitive) -> Self {
-                let inner = core::num::$non_zero::new_unchecked(value ^ $primitive::max_value());
+                let inner = core::num::$non_zero::new_unchecked(value ^ $primitive::MAX);
                 Self(inner)
             }
 
             /// Returns the value as a primitive type.
             #[inline]
             pub const fn get(&self) -> $primitive {
-                self.0.get() ^ $primitive::max_value()
+                self.0.get() ^ $primitive::MAX
+            }
+        }
+
+        impl Default for $nonmax {
+            fn default() -> Self {
+                unsafe { Self::new_unchecked(0) }
             }
         }
 
@@ -213,7 +219,7 @@ macro_rules! nonmax {
                 let some = $nonmax::new(19).unwrap();
                 assert_eq!(some.get(), 19);
 
-                let max = $nonmax::new($primitive::max_value());
+                let max = $nonmax::new($primitive::MAX);
                 assert_eq!(max, None);
             }
 
@@ -230,21 +236,18 @@ macro_rules! nonmax {
                 let zero = $primitive::from(zero);
                 assert_eq!(zero, 0);
 
-                $nonmax::try_from($primitive::max_value()).unwrap_err();
+                $nonmax::try_from($primitive::MAX).unwrap_err();
             }
 
             #[test]
             #[cfg(feature = "std")] // to_string
             fn parse() {
-                for value in [0, 19, $primitive::max_value() - 1].iter().copied() {
+                for value in [0, 19, $primitive::MAX - 1].iter().copied() {
                     let string = value.to_string();
                     let nonmax = string.parse::<$nonmax>().unwrap();
                     assert_eq!(nonmax.get(), value);
                 }
-                $primitive::max_value()
-                    .to_string()
-                    .parse::<$nonmax>()
-                    .unwrap_err();
+                $primitive::MAX.to_string().parse::<$nonmax>().unwrap_err();
             }
 
             #[test]
@@ -252,7 +255,7 @@ macro_rules! nonmax {
             fn fmt() {
                 let zero = $nonmax::new(0).unwrap();
                 let some = $nonmax::new(19).unwrap();
-                let max1 = $nonmax::new($primitive::max_value() - 1).unwrap();
+                let max1 = $nonmax::new($primitive::MAX - 1).unwrap();
                 for value in [zero, some, max1].iter().copied() {
                     assert_eq!(format!("{}", value.get()), format!("{}", value)); // Display
                     assert_eq!(format!("{:?}", value.get()), format!("{:?}", value)); // Debug
