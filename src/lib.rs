@@ -205,6 +205,28 @@ macro_rules! nonmax {
             (Debug, Display, Binary, Octal, LowerHex, UpperHex) for $nonmax
         }
 
+        #[cfg(feature = "serde")]
+        impl serde::Serialize for $nonmax {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                self.get().serialize(serializer)
+            }
+        }
+
+        #[cfg(feature = "serde")]
+        impl<'de> serde::Deserialize<'de> for $nonmax {
+            fn deserialize<D>(deserializer: D) -> Result<$nonmax, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                let value = $primitive::deserialize(deserializer)?;
+                use std::convert::TryFrom;
+                Self::try_from(value).map_err(serde::de::Error::custom)
+            }
+        }
+
         #[cfg(test)]
         mod $primitive {
             use super::*;
@@ -263,6 +285,17 @@ macro_rules! nonmax {
                     assert_eq!(format!("{:o}", value.get()), format!("{:o}", value)); // Octal
                     assert_eq!(format!("{:x}", value.get()), format!("{:x}", value)); // LowerHex
                     assert_eq!(format!("{:X}", value.get()), format!("{:X}", value)); // UpperHex
+                }
+            }
+
+            #[test]
+            #[cfg(feature = "serde")]
+            fn serde() {
+                for value in [0, 19, $primitive::MAX - 1] {
+                    let nonmax_value = $nonmax::new(value).unwrap();
+                    let encoded: Vec<u8> = bincode::serialize(&nonmax_value).unwrap();
+                    let decoded: $nonmax = bincode::deserialize(&encoded[..]).unwrap();
+                    assert_eq!(nonmax_value, decoded);
                 }
             }
         }

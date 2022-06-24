@@ -47,6 +47,8 @@ assert_eq!(oops, None);
 [`TryFromIntError`]. Disable this feature for
 [`#![no_std]`](https://rust-embedded.github.io/book/intro/no-std.html) support.
 
+* `serde`: implements the `Serialize` and `Deserialize` traits from [`serde`](https://crates.io/crates/serde).
+
 ### Minimum Supported Rust Version (MSRV)
 
 nonmax supports Rust 1.47.0 and newer. Until this library reaches 1.0,

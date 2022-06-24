@@ -2,6 +2,7 @@
 
 ## Unreleased Changes
 * Implemented `Default` for `NonMax*`.
+* Added serialization/deserialization with `serde` when the corresponding feature is enabled.
 
 ## 0.5.0 (2020-10-18)
 * Raised MSRV to 1.47.0 to eliminate `unsafe` in `new`.
