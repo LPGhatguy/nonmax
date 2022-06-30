@@ -1,6 +1,8 @@
 # nonmax Changelog
 
 ## Unreleased Changes
+
+## 0.5.1 (2022-06-29)
 * Implemented `Default` for `NonMax*`.
 * Added serialization/deserialization with `serde` when the corresponding feature is enabled.
 
