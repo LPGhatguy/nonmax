@@ -291,7 +291,7 @@ macro_rules! nonmax {
             #[test]
             #[cfg(feature = "serde")]
             fn serde() {
-                for value in [0, 19, $primitive::MAX - 1] {
+                for &value in [0, 19, $primitive::MAX - 1].iter() {
                     let nonmax_value = $nonmax::new(value).unwrap();
                     let encoded: Vec<u8> = bincode::serialize(&nonmax_value).unwrap();
                     let decoded: $nonmax = bincode::deserialize(&encoded[..]).unwrap();
