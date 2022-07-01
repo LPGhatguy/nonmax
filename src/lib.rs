@@ -121,7 +121,7 @@ macro_rules! impl_nonmax_fmt {
 macro_rules! nonmax {
     ( common, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
         /// An integer that is known not to equal its maximum value.
-        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[derive(Clone, Copy, PartialEq, Eq, Hash)]
         #[repr(transparent)]
         pub struct $nonmax(core::num::$non_zero);
 
@@ -178,6 +178,17 @@ macro_rules! nonmax {
             type Err = ParseIntError;
             fn from_str(value: &str) -> Result<Self, Self::Err> {
                 Self::new($primitive::from_str(value)?).ok_or(ParseIntError(()))
+            }
+        }
+
+        impl core::cmp::Ord for $nonmax {
+            fn cmp(&self, other: &Self) -> core::cmp::Ordering {
+                self.get().cmp(&other.get())
+            }
+        }
+        impl core::cmp::PartialOrd for $nonmax {
+            fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+                Some(self.cmp(other))
             }
         }
 
@@ -259,6 +270,17 @@ macro_rules! nonmax {
                 assert_eq!(zero, 0);
 
                 $nonmax::try_from($primitive::MAX).unwrap_err();
+            }
+
+            #[test]
+            fn cmp() {
+                let zero = NonMaxU8::new(0).unwrap();
+                let one = NonMaxU8::new(1).unwrap();
+                let two = NonMaxU8::new(2).unwrap();
+                assert!(zero < one);
+                assert!(one < two);
+                assert!(two > one);
+                assert!(one > zero);
             }
 
             #[test]
