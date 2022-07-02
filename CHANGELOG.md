@@ -2,6 +2,9 @@
 
 ## Unreleased Changes
 
+## 0.5.2 (2022-07-01)
+* Fixed `PartialOrd` and `Ord` implementations being backwards.
+
 ## 0.5.1 (2022-06-29)
 * Implemented `Default` for `NonMax*`.
 * Added serialization/deserialization with `serde` when the corresponding feature is enabled.
