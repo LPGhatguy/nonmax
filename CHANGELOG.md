@@ -2,8 +2,11 @@
 
 ## Unreleased Changes
 
-## 0.5.2 (2022-07-01)
+## 0.5.3 (2022-07-01)
 * Fixed `PartialOrd` and `Ord` implementations being backwards.
+
+## 0.5.2 (20222-07-01)
+(bad release, yanked)
 
 ## 0.5.1 (2022-06-29)
 * Implemented `Default` for `NonMax*`.
