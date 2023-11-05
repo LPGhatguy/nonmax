@@ -283,9 +283,9 @@ macro_rules! nonmax {
 
             #[test]
             fn cmp() {
-                let zero = NonMaxU8::new(0).unwrap();
-                let one = NonMaxU8::new(1).unwrap();
-                let two = NonMaxU8::new(2).unwrap();
+                let zero = $nonmax::new(0).unwrap();
+                let one = $nonmax::new(1).unwrap();
+                let two = $nonmax::new(2).unwrap();
                 assert!(zero < one);
                 assert!(one < two);
                 assert!(two > one);
