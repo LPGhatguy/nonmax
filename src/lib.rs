@@ -153,6 +153,15 @@ macro_rules! nonmax {
             pub const fn get(&self) -> $primitive {
                 self.0.get() ^ $primitive::MAX
             }
+
+            /// Gets non-max with the value zero (0)
+            pub const ZERO : $nonmax = unsafe { Self::new_unchecked(0) };
+
+            /// Gets non-max with the value one (1)
+            pub const ONE : $nonmax = unsafe { Self::new_unchecked(1) };
+
+            /// Gets non-max with maximum possible value (which is maximum of the underlying primitive minus one)
+            pub const MAX : $nonmax = unsafe { Self::new_unchecked($primitive::MAX - 1) };
         }
 
         impl Default for $nonmax {
@@ -281,6 +290,16 @@ macro_rules! nonmax {
                 assert!(one < two);
                 assert!(two > one);
                 assert!(one > zero);
+            }
+
+            #[test]
+            fn constants() {
+                let zero = $nonmax::ZERO;
+                let one = $nonmax::ONE;
+                let max = $nonmax::MAX;
+                assert_eq!(zero.get(), 0);
+                assert_eq!(one.get(), 1);
+                assert_eq!(max.get(), $primitive::MAX - 1);
             }
 
             #[test]
