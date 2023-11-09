@@ -2,6 +2,11 @@
 
 ## Unreleased Changes
 
+## 0.5.4 (2023-11-09)
+* Added `ZERO`, `ONE`, and `MAX` associated constants. ([#15])
+
+[#15]: https://github.com/LPGhatguy/nonmax/pull/15
+
 ## 0.5.3 (2022-07-01)
 * Fixed `PartialOrd` and `Ord` implementations being backwards.
 
