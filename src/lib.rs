@@ -242,7 +242,7 @@ macro_rules! nonmax {
                 D: serde::Deserializer<'de>,
             {
                 let value = $primitive::deserialize(deserializer)?;
-                use std::convert::TryFrom;
+                use core::convert::TryFrom;
                 Self::try_from(value).map_err(serde::de::Error::custom)
             }
         }
