@@ -2,6 +2,11 @@
 
 ## Unreleased Changes
 
+## 0.5.5 (2023-11-19)
+* Fixed `serde` feature not working in `no_std` contexts ([#16])
+
+[#16]: https://github.com/LPGhatguy/nonmax/pull/16
+
 ## 0.5.4 (2023-11-09)
 * Added `ZERO`, `ONE`, and `MAX` associated constants. ([#15])
 
