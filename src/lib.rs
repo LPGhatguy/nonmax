@@ -118,8 +118,9 @@ macro_rules! impl_nonmax_fmt {
     };
 }
 
+/// Define the basic nonmax wrapper using NonZero inner
 macro_rules! nonmax {
-    ( common, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
+    ( $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
         /// An integer that is known not to equal its maximum value.
         #[derive(Clone, Copy, PartialEq, Eq, Hash)]
         #[repr(transparent)]
@@ -153,7 +154,14 @@ macro_rules! nonmax {
             pub const fn get(&self) -> $primitive {
                 self.0.get() ^ $primitive::MAX
             }
+        }
+    };
+}
 
+/// Provide convenience methods over an basic nonmax wrapper with `new_unchecked`` and `get`.
+macro_rules! nonmax_impls {
+    ( common, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
+        impl $nonmax {
             /// Gets non-max with the value zero (0)
             pub const ZERO: $nonmax = unsafe { Self::new_unchecked(0) };
 
@@ -343,12 +351,12 @@ macro_rules! nonmax {
     };
 
     ( signed, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
-        nonmax!(common, $nonmax, $non_zero, $primitive);
+        nonmax_impls!(common, $nonmax, $non_zero, $primitive);
         // Nothing unique to signed versions (yet)
     };
 
     ( unsigned, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
-        nonmax!(common, $nonmax, $non_zero, $primitive);
+        nonmax_impls!(common, $nonmax, $non_zero, $primitive);
 
         impl core::ops::BitAnd<$nonmax> for $primitive {
             type Output = $nonmax;
@@ -381,21 +389,31 @@ macro_rules! nonmax {
             }
         }
     };
+
+    ( def, signed, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
+        nonmax!($nonmax, $non_zero, $primitive);
+        nonmax_impls!(signed, $nonmax, $non_zero, $primitive);
+    };
+
+    ( def, unsigned, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
+        nonmax!($nonmax, $non_zero, $primitive);
+        nonmax_impls!(unsigned, $nonmax, $non_zero, $primitive);
+    };
 }
 
-nonmax!(signed, NonMaxI8, NonZeroI8, i8);
-nonmax!(signed, NonMaxI16, NonZeroI16, i16);
-nonmax!(signed, NonMaxI32, NonZeroI32, i32);
-nonmax!(signed, NonMaxI64, NonZeroI64, i64);
-nonmax!(signed, NonMaxI128, NonZeroI128, i128);
-nonmax!(signed, NonMaxIsize, NonZeroIsize, isize);
+nonmax_impls!(def, signed, NonMaxI8, NonZeroI8, i8);
+nonmax_impls!(def, signed, NonMaxI16, NonZeroI16, i16);
+nonmax_impls!(def, signed, NonMaxI32, NonZeroI32, i32);
+nonmax_impls!(def, signed, NonMaxI64, NonZeroI64, i64);
+nonmax_impls!(def, signed, NonMaxI128, NonZeroI128, i128);
+nonmax_impls!(def, signed, NonMaxIsize, NonZeroIsize, isize);
 
-nonmax!(unsigned, NonMaxU8, NonZeroU8, u8);
-nonmax!(unsigned, NonMaxU16, NonZeroU16, u16);
-nonmax!(unsigned, NonMaxU32, NonZeroU32, u32);
-nonmax!(unsigned, NonMaxU64, NonZeroU64, u64);
-nonmax!(unsigned, NonMaxU128, NonZeroU128, u128);
-nonmax!(unsigned, NonMaxUsize, NonZeroUsize, usize);
+nonmax_impls!(def, unsigned, NonMaxU8, NonZeroU8, u8);
+nonmax_impls!(def, unsigned, NonMaxU16, NonZeroU16, u16);
+nonmax_impls!(def, unsigned, NonMaxU32, NonZeroU32, u32);
+nonmax_impls!(def, unsigned, NonMaxU64, NonZeroU64, u64);
+nonmax_impls!(def, unsigned, NonMaxU128, NonZeroU128, u128);
+nonmax_impls!(def, unsigned, NonMaxUsize, NonZeroUsize, usize);
 
 // https://doc.rust-lang.org/1.47.0/src/core/convert/num.rs.html#383-407
 macro_rules! impl_nonmax_from {
