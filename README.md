@@ -27,18 +27,22 @@ standard library:
 ### Example
 
 ```rust
-use nonmax::{NonMaxI16, NonMaxU8};
+use nonmax::{NonMaxI16, NonMaxU8, nonmax_i16, nonmax_u8};
 
-let value = NonMaxU8::new(16).expect("16 should definitely fit in a u8");
+let value = nonmax_u8!(16); // 16 definitely fits in a u8
 assert_eq!(value.get(), 16);
 assert_eq!(std::mem::size_of_val(&value), 1);
 
-let signed = NonMaxI16::new(i16::min_value()).expect("minimum values are fine");
-assert_eq!(signed.get(), i16::min_value());
+let signed = nonmax_i16!(i16::MIN); // min values are fine
+assert_eq!(signed.get(), i16::MIN);
 assert_eq!(std::mem::size_of_val(&signed), 2);
 
+// Runtime check
 let oops = NonMaxU8::new(255);
 assert_eq!(oops, None);
+
+use nonmax::nonmax_u8;
+let _ = nonmax_u8!(u8::MAX); // compiler error: the evaluated program panicked at 'Value may not be max'
 ```
 
 ### Features
@@ -51,7 +55,7 @@ assert_eq!(oops, None);
 
 ### Minimum Supported Rust Version (MSRV)
 
-nonmax supports Rust 1.47.0 and newer. Until this library reaches 1.0,
+nonmax supports Rust 1.60.0 and newer. Until this library reaches 1.0,
 changes to the MSRV will require major version bumps. After 1.0, MSRV changes
 will only require minor version bumps, but will need significant justification.
 
