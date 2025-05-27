@@ -26,18 +26,24 @@ standard library:
 ## Example
 
 ```
-use nonmax::{NonMaxI16, NonMaxU8};
+use nonmax::{NonMaxI16, NonMaxU8, nonmax_i16, nonmax_u8};
 
-let value = NonMaxU8::new(16).expect("16 should definitely fit in a u8");
+let value = nonmax_u8!(16); // 16 definitely fits in a u8
 assert_eq!(value.get(), 16);
 assert_eq!(std::mem::size_of_val(&value), 1);
 
-let signed = NonMaxI16::new(i16::min_value()).expect("minimum values are fine");
-assert_eq!(signed.get(), i16::min_value());
+let signed = nonmax_i16!(i16::MIN); // min values are fine
+assert_eq!(signed.get(), i16::MIN);
 assert_eq!(std::mem::size_of_val(&signed), 2);
 
+// Runtime check
 let oops = NonMaxU8::new(255);
 assert_eq!(oops, None);
+```
+
+```compile_fail
+use nonmax::nonmax_u8;
+let _ = nonmax_u8!(u8::MAX); // compiler error: the evaluated program panicked at 'Value may not be max'
 ```
 
 ## Features
@@ -48,7 +54,7 @@ assert_eq!(oops, None);
 
 ## Minimum Supported Rust Version (MSRV)
 
-nonmax supports Rust 1.47.0 and newer. Until this library reaches 1.0,
+nonmax supports Rust 1.60.0 and newer. Until this library reaches 1.0,
 changes to the MSRV will require major version bumps. After 1.0, MSRV changes
 will only require minor version bumps, but will need significant justification.
 */
@@ -119,7 +125,7 @@ macro_rules! impl_nonmax_fmt {
 }
 
 macro_rules! nonmax {
-    ( common, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
+    ( common, $nonmax: ident, $non_zero: ident, $primitive: ident, $macro:ident ) => {
         /// An integer that is known not to equal its maximum value.
         #[derive(Clone, Copy, PartialEq, Eq, Hash)]
         #[repr(transparent)]
@@ -155,13 +161,13 @@ macro_rules! nonmax {
             }
 
             /// Gets non-max with the value zero (0)
-            pub const ZERO: $nonmax = unsafe { Self::new_unchecked(0) };
+            pub const ZERO: $nonmax = $macro!(0);
 
             /// Gets non-max with the value one (1)
-            pub const ONE: $nonmax = unsafe { Self::new_unchecked(1) };
+            pub const ONE: $nonmax = $macro!(1);
 
             /// Gets non-max with maximum possible value (which is maximum of the underlying primitive minus one)
-            pub const MAX: $nonmax = unsafe { Self::new_unchecked($primitive::MAX - 1) };
+            pub const MAX: $nonmax = $macro!($primitive::MAX - 1);
         }
 
         impl Default for $nonmax {
@@ -245,6 +251,20 @@ macro_rules! nonmax {
                 use core::convert::TryFrom;
                 Self::try_from(value).map_err(serde::de::Error::custom)
             }
+        }
+
+        /// Creates a new non-max if the given value is not the maximum
+        /// value. Fails to compile if the given value is the maximum value.
+        #[macro_export]
+        macro_rules! $macro {
+            ($val:expr) => {{
+                const {
+                    match $crate::$nonmax::new($val) {
+                        Some(x) => x,
+                        None => panic!("Value may not be max"),
+                    }
+                }
+            }};
         }
 
         #[cfg(test)]
@@ -342,13 +362,13 @@ macro_rules! nonmax {
         }
     };
 
-    ( signed, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
-        nonmax!(common, $nonmax, $non_zero, $primitive);
+    ( signed, $nonmax: ident, $non_zero: ident, $primitive: ident, $macro: ident ) => {
+        nonmax!(common, $nonmax, $non_zero, $primitive, $macro);
         // Nothing unique to signed versions (yet)
     };
 
-    ( unsigned, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
-        nonmax!(common, $nonmax, $non_zero, $primitive);
+    ( unsigned, $nonmax: ident, $non_zero: ident, $primitive: ident, $macro: ident ) => {
+        nonmax!(common, $nonmax, $non_zero, $primitive, $macro);
 
         impl core::ops::BitAnd<$nonmax> for $primitive {
             type Output = $nonmax;
@@ -383,19 +403,19 @@ macro_rules! nonmax {
     };
 }
 
-nonmax!(signed, NonMaxI8, NonZeroI8, i8);
-nonmax!(signed, NonMaxI16, NonZeroI16, i16);
-nonmax!(signed, NonMaxI32, NonZeroI32, i32);
-nonmax!(signed, NonMaxI64, NonZeroI64, i64);
-nonmax!(signed, NonMaxI128, NonZeroI128, i128);
-nonmax!(signed, NonMaxIsize, NonZeroIsize, isize);
+nonmax!(signed, NonMaxI8, NonZeroI8, i8, nonmax_i8);
+nonmax!(signed, NonMaxI16, NonZeroI16, i16, nonmax_i16);
+nonmax!(signed, NonMaxI32, NonZeroI32, i32, nonmax_i32);
+nonmax!(signed, NonMaxI64, NonZeroI64, i64, nonmax_i64);
+nonmax!(signed, NonMaxI128, NonZeroI128, i128, nonmax_i128);
+nonmax!(signed, NonMaxIsize, NonZeroIsize, isize, nonmax_isize);
 
-nonmax!(unsigned, NonMaxU8, NonZeroU8, u8);
-nonmax!(unsigned, NonMaxU16, NonZeroU16, u16);
-nonmax!(unsigned, NonMaxU32, NonZeroU32, u32);
-nonmax!(unsigned, NonMaxU64, NonZeroU64, u64);
-nonmax!(unsigned, NonMaxU128, NonZeroU128, u128);
-nonmax!(unsigned, NonMaxUsize, NonZeroUsize, usize);
+nonmax!(unsigned, NonMaxU8, NonZeroU8, u8, nonmax_u8);
+nonmax!(unsigned, NonMaxU16, NonZeroU16, u16, nonmax_u16);
+nonmax!(unsigned, NonMaxU32, NonZeroU32, u32, nonmax_u32);
+nonmax!(unsigned, NonMaxU64, NonZeroU64, u64, nonmax_u64);
+nonmax!(unsigned, NonMaxU128, NonZeroU128, u128, nonmax_u128);
+nonmax!(unsigned, NonMaxUsize, NonZeroUsize, usize, nonmax_usize);
 
 // https://doc.rust-lang.org/1.47.0/src/core/convert/num.rs.html#383-407
 macro_rules! impl_nonmax_from {
