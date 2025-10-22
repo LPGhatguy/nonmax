@@ -155,18 +155,18 @@ macro_rules! nonmax {
             }
 
             /// Gets non-max with the value zero (0)
-            pub const ZERO: $nonmax = unsafe { Self::new_unchecked(0) };
+            pub const ZERO: $nonmax = Self::new(0).unwrap();
 
             /// Gets non-max with the value one (1)
-            pub const ONE: $nonmax = unsafe { Self::new_unchecked(1) };
+            pub const ONE: $nonmax = Self::new(1).unwrap();
 
             /// Gets non-max with maximum possible value (which is maximum of the underlying primitive minus one)
-            pub const MAX: $nonmax = unsafe { Self::new_unchecked($primitive::MAX - 1) };
+            pub const MAX: $nonmax = Self::new($primitive::MAX - 1).unwrap();
         }
 
         impl Default for $nonmax {
             fn default() -> Self {
-                unsafe { Self::new_unchecked(0) }
+                Self::ZERO
             }
         }
 
