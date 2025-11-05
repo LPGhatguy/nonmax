@@ -100,13 +100,32 @@ impl From<core::num::ParseIntError> for ParseIntError {
     }
 }
 
+/// An integer that is known not to equal its maximum value.
+#[allow(private_bounds)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[repr(transparent)]
+pub struct NonMax<Integer: HasNonZero>(Integer::NonZero);
+
+/// Implemented for primitive Integer types that have a corresponding NonZero type
+unsafe trait HasNonZero {
+    type NonZero;
+}
+
+macro_rules! impl_has_non_zero {
+    ($primitive:ty) => {
+        unsafe impl HasNonZero for $primitive {
+            type NonZero = ::core::num::NonZero<$primitive>;
+        }
+    };
+}
+
 // error[E0658]: the `!` type is experimental
 // https://github.com/rust-lang/rust/issues/35121
 // impl From<!> for TryFromIntError { ... }
 
 // https://doc.rust-lang.org/1.47.0/src/core/num/mod.rs.html#31-43
 macro_rules! impl_nonmax_fmt {
-    ( ( $( $Trait: ident ),+ ) for $nonmax: ident ) => {
+    ( ( $( $Trait: ident ),+ ) for $nonmax: ty ) => {
         $(
             impl core::fmt::$Trait for $nonmax {
                 #[inline]
@@ -119,18 +138,16 @@ macro_rules! impl_nonmax_fmt {
 }
 
 macro_rules! nonmax {
-    ( common, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
+    ( common, $primitive: ident, $alias: ident ) => {
         /// An integer that is known not to equal its maximum value.
-        #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-        #[repr(transparent)]
-        pub struct $nonmax(core::num::$non_zero);
+        pub type $alias = NonMax<$primitive>;
 
-        impl $nonmax {
+        impl NonMax<$primitive> {
             /// Creates a new non-max if the given value is not the maximum
             /// value.
             #[inline]
             pub const fn new(value: $primitive) -> Option<Self> {
-                match core::num::$non_zero::new(value ^ $primitive::MAX) {
+                match core::num::NonZero::new(value ^ $primitive::MAX) {
                     None => None,
                     Some(value) => Some(Self(value)),
                 }
@@ -144,7 +161,7 @@ macro_rules! nonmax {
             /// primitive type.
             #[inline]
             pub const unsafe fn new_unchecked(value: $primitive) -> Self {
-                let inner = core::num::$non_zero::new_unchecked(value ^ $primitive::MAX);
+                let inner = core::num::NonZero::new_unchecked(value ^ $primitive::MAX);
                 Self(inner)
             }
 
@@ -155,47 +172,47 @@ macro_rules! nonmax {
             }
 
             /// Gets non-max with the value zero (0)
-            pub const ZERO: $nonmax = Self::new(0).unwrap();
+            pub const ZERO: NonMax<$primitive> = Self::new(0).unwrap();
 
             /// Gets non-max with the value one (1)
-            pub const ONE: $nonmax = Self::new(1).unwrap();
+            pub const ONE: NonMax<$primitive> = Self::new(1).unwrap();
 
             /// Gets non-max with maximum possible value (which is maximum of the underlying primitive minus one)
-            pub const MAX: $nonmax = Self::new($primitive::MAX - 1).unwrap();
+            pub const MAX: NonMax<$primitive> = Self::new($primitive::MAX - 1).unwrap();
         }
 
-        impl Default for $nonmax {
+        impl Default for NonMax<$primitive> {
             fn default() -> Self {
                 Self::ZERO
             }
         }
 
-        impl From<$nonmax> for $primitive {
-            fn from(value: $nonmax) -> Self {
+        impl From<NonMax<$primitive>> for $primitive {
+            fn from(value: NonMax<$primitive>) -> Self {
                 value.get()
             }
         }
 
-        impl core::convert::TryFrom<$primitive> for $nonmax {
+        impl core::convert::TryFrom<$primitive> for NonMax<$primitive> {
             type Error = TryFromIntError;
             fn try_from(value: $primitive) -> Result<Self, Self::Error> {
                 Self::new(value).ok_or(TryFromIntError(()))
             }
         }
 
-        impl core::str::FromStr for $nonmax {
+        impl core::str::FromStr for NonMax<$primitive> {
             type Err = ParseIntError;
             fn from_str(value: &str) -> Result<Self, Self::Err> {
                 Self::new($primitive::from_str(value)?).ok_or(ParseIntError(()))
             }
         }
 
-        impl core::cmp::Ord for $nonmax {
+        impl core::cmp::Ord for NonMax<$primitive> {
             fn cmp(&self, other: &Self) -> core::cmp::Ordering {
                 self.get().cmp(&other.get())
             }
         }
-        impl core::cmp::PartialOrd for $nonmax {
+        impl core::cmp::PartialOrd for NonMax<$primitive> {
             fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
                 Some(self.cmp(other))
             }
@@ -205,28 +222,28 @@ macro_rules! nonmax {
         // NonMax can implement BitAnd but not BitOr, with some caveats for signed values:
         // -1 (11...11) & max (01...11) can result in signed max (01...11), so both operands must be nonmax for signed variants
 
-        impl core::ops::BitAnd<$nonmax> for $nonmax {
-            type Output = $nonmax;
-            fn bitand(self, rhs: $nonmax) -> Self::Output {
+        impl core::ops::BitAnd<NonMax<$primitive>> for NonMax<$primitive> {
+            type Output = NonMax<$primitive>;
+            fn bitand(self, rhs: NonMax<$primitive>) -> Self::Output {
                 // Safety: since `rhs` is non-max, the result of the
                 // bitwise-and will be non-max regardless of the value of `self`
-                unsafe { $nonmax::new_unchecked(self.get() & rhs.get()) }
+                unsafe { NonMax::<$primitive>::new_unchecked(self.get() & rhs.get()) }
             }
         }
 
-        impl core::ops::BitAndAssign<$nonmax> for $nonmax {
-            fn bitand_assign(&mut self, rhs: $nonmax) {
+        impl core::ops::BitAndAssign<NonMax<$primitive>> for NonMax<$primitive> {
+            fn bitand_assign(&mut self, rhs: NonMax<$primitive>) {
                 *self = *self & rhs;
             }
         }
 
         // https://doc.rust-lang.org/1.47.0/src/core/num/mod.rs.html#173-175
         impl_nonmax_fmt! {
-            (Debug, Display, Binary, Octal, LowerHex, UpperHex) for $nonmax
+            (Debug, Display, Binary, Octal, LowerHex, UpperHex) for NonMax<$primitive>
         }
 
         #[cfg(feature = "serde")]
-        impl serde::Serialize for $nonmax {
+        impl serde::Serialize for NonMax<$primitive> {
             fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
@@ -236,8 +253,8 @@ macro_rules! nonmax {
         }
 
         #[cfg(feature = "serde")]
-        impl<'de> serde::Deserialize<'de> for $nonmax {
-            fn deserialize<D>(deserializer: D) -> Result<$nonmax, D::Error>
+        impl<'de> serde::Deserialize<'de> for NonMax<$primitive> {
+            fn deserialize<D>(deserializer: D) -> Result<NonMax<$primitive>, D::Error>
             where
                 D: serde::Deserializer<'de>,
             {
@@ -255,37 +272,40 @@ macro_rules! nonmax {
 
             #[test]
             fn construct() {
-                let zero = $nonmax::new(0).unwrap();
+                let zero = NonMax::<$primitive>::new(0).unwrap();
                 assert_eq!(zero.get(), 0);
 
-                let some = $nonmax::new(19).unwrap();
+                let some = NonMax::<$primitive>::new(19).unwrap();
                 assert_eq!(some.get(), 19);
 
-                let max = $nonmax::new($primitive::MAX);
+                let max = NonMax::<$primitive>::new($primitive::MAX);
                 assert_eq!(max, None);
             }
 
             #[test]
             fn sizes_correct() {
-                assert_eq!(size_of::<$primitive>(), size_of::<$nonmax>());
-                assert_eq!(size_of::<$nonmax>(), size_of::<Option<$nonmax>>());
+                assert_eq!(size_of::<$primitive>(), size_of::<NonMax<$primitive>>());
+                assert_eq!(
+                    size_of::<NonMax<$primitive>>(),
+                    size_of::<Option<NonMax<$primitive>>>()
+                );
             }
 
             #[test]
             fn convert() {
                 use core::convert::TryFrom;
-                let zero = $nonmax::try_from(0 as $primitive).unwrap();
+                let zero = NonMax::<$primitive>::try_from(0 as $primitive).unwrap();
                 let zero = $primitive::from(zero);
                 assert_eq!(zero, 0);
 
-                $nonmax::try_from($primitive::MAX).unwrap_err();
+                NonMax::<$primitive>::try_from($primitive::MAX).unwrap_err();
             }
 
             #[test]
             fn cmp() {
-                let zero = $nonmax::new(0).unwrap();
-                let one = $nonmax::new(1).unwrap();
-                let two = $nonmax::new(2).unwrap();
+                let zero = NonMax::<$primitive>::new(0).unwrap();
+                let one = NonMax::<$primitive>::new(1).unwrap();
+                let two = NonMax::<$primitive>::new(2).unwrap();
                 assert!(zero < one);
                 assert!(one < two);
                 assert!(two > one);
@@ -294,9 +314,9 @@ macro_rules! nonmax {
 
             #[test]
             fn constants() {
-                let zero = $nonmax::ZERO;
-                let one = $nonmax::ONE;
-                let max = $nonmax::MAX;
+                let zero = NonMax::<$primitive>::ZERO;
+                let one = NonMax::<$primitive>::ONE;
+                let max = NonMax::<$primitive>::MAX;
                 assert_eq!(zero.get(), 0);
                 assert_eq!(one.get(), 1);
                 assert_eq!(max.get(), $primitive::MAX - 1);
@@ -307,18 +327,21 @@ macro_rules! nonmax {
             fn parse() {
                 for value in [0, 19, $primitive::MAX - 1].iter().copied() {
                     let string = value.to_string();
-                    let nonmax = string.parse::<$nonmax>().unwrap();
+                    let nonmax = string.parse::<NonMax<$primitive>>().unwrap();
                     assert_eq!(nonmax.get(), value);
                 }
-                $primitive::MAX.to_string().parse::<$nonmax>().unwrap_err();
+                $primitive::MAX
+                    .to_string()
+                    .parse::<NonMax<$primitive>>()
+                    .unwrap_err();
             }
 
             #[test]
             #[cfg(feature = "std")] // format!
             fn fmt() {
-                let zero = $nonmax::new(0).unwrap();
-                let some = $nonmax::new(19).unwrap();
-                let max1 = $nonmax::new($primitive::MAX - 1).unwrap();
+                let zero = NonMax::<$primitive>::new(0).unwrap();
+                let some = NonMax::<$primitive>::new(19).unwrap();
+                let max1 = NonMax::<$primitive>::new($primitive::MAX - 1).unwrap();
                 for value in [zero, some, max1].iter().copied() {
                     assert_eq!(format!("{}", value.get()), format!("{}", value)); // Display
                     assert_eq!(format!("{:?}", value.get()), format!("{:?}", value)); // Debug
@@ -333,69 +356,82 @@ macro_rules! nonmax {
             #[cfg(feature = "serde")]
             fn serde() {
                 for &value in [0, 19, $primitive::MAX - 1].iter() {
-                    let nonmax_value = $nonmax::new(value).unwrap();
+                    let nonmax_value = NonMax::<$primitive>::new(value).unwrap();
                     let encoded: Vec<u8> = bincode::serialize(&nonmax_value).unwrap();
-                    let decoded: $nonmax = bincode::deserialize(&encoded[..]).unwrap();
+                    let decoded: NonMax<$primitive> = bincode::deserialize(&encoded[..]).unwrap();
                     assert_eq!(nonmax_value, decoded);
                 }
             }
         }
     };
 
-    ( signed, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
-        nonmax!(common, $nonmax, $non_zero, $primitive);
+    ( signed, $primitive: ident,  $alias: ident) => {
+        nonmax!(common, $primitive, $alias);
         // Nothing unique to signed versions (yet)
     };
 
-    ( unsigned, $nonmax: ident, $non_zero: ident, $primitive: ident ) => {
-        nonmax!(common, $nonmax, $non_zero, $primitive);
+    ( unsigned, $primitive: ident, $alias: ident) => {
+        nonmax!(common, $primitive, $alias);
 
-        impl core::ops::BitAnd<$nonmax> for $primitive {
-            type Output = $nonmax;
-            fn bitand(self, rhs: $nonmax) -> Self::Output {
+        impl core::ops::BitAnd<NonMax<$primitive>> for $primitive {
+            type Output = NonMax<$primitive>;
+            fn bitand(self, rhs: NonMax<$primitive>) -> Self::Output {
                 // Safety: since `rhs` is non-max, the result of the
                 // bitwise-and will be non-max regardless of the value of `self`
-                unsafe { $nonmax::new_unchecked(self & rhs.get()) }
+                unsafe { NonMax::<$primitive>::new_unchecked(self & rhs.get()) }
             }
         }
 
-        impl core::ops::BitAnd<$primitive> for $nonmax {
-            type Output = $nonmax;
+        impl core::ops::BitAnd<$primitive> for NonMax<$primitive> {
+            type Output = NonMax<$primitive>;
             fn bitand(self, rhs: $primitive) -> Self::Output {
                 // Safety: since `self` is non-max, the result of the
                 // bitwise-and will be non-max regardless of the value of `rhs`
-                unsafe { $nonmax::new_unchecked(self.get() & rhs) }
+                unsafe { NonMax::<$primitive>::new_unchecked(self.get() & rhs) }
             }
         }
 
-        impl core::ops::BitAndAssign<$primitive> for $nonmax {
+        impl core::ops::BitAndAssign<$primitive> for NonMax<$primitive> {
             fn bitand_assign(&mut self, rhs: $primitive) {
                 *self = *self & rhs;
             }
         }
 
         // std doesn't have an equivalent BitAndOr for $nonzero, but this just makes sense
-        impl core::ops::BitAndAssign<$nonmax> for $primitive {
-            fn bitand_assign(&mut self, rhs: $nonmax) {
+        impl core::ops::BitAndAssign<NonMax<$primitive>> for $primitive {
+            fn bitand_assign(&mut self, rhs: NonMax<$primitive>) {
                 *self = *self & rhs.get();
             }
         }
     };
 }
 
-nonmax!(signed, NonMaxI8, NonZeroI8, i8);
-nonmax!(signed, NonMaxI16, NonZeroI16, i16);
-nonmax!(signed, NonMaxI32, NonZeroI32, i32);
-nonmax!(signed, NonMaxI64, NonZeroI64, i64);
-nonmax!(signed, NonMaxI128, NonZeroI128, i128);
-nonmax!(signed, NonMaxIsize, NonZeroIsize, isize);
+impl_has_non_zero!(i8);
+impl_has_non_zero!(i16);
+impl_has_non_zero!(i32);
+impl_has_non_zero!(i64);
+impl_has_non_zero!(i128);
+impl_has_non_zero!(isize);
+impl_has_non_zero!(u8);
+impl_has_non_zero!(u16);
+impl_has_non_zero!(u32);
+impl_has_non_zero!(u64);
+impl_has_non_zero!(u128);
+impl_has_non_zero!(usize);
 
-nonmax!(unsigned, NonMaxU8, NonZeroU8, u8);
-nonmax!(unsigned, NonMaxU16, NonZeroU16, u16);
-nonmax!(unsigned, NonMaxU32, NonZeroU32, u32);
-nonmax!(unsigned, NonMaxU64, NonZeroU64, u64);
-nonmax!(unsigned, NonMaxU128, NonZeroU128, u128);
-nonmax!(unsigned, NonMaxUsize, NonZeroUsize, usize);
+nonmax!(signed, i8, NonMaxI8);
+nonmax!(signed, i16, NonMaxI16);
+nonmax!(signed, i32, NonMaxI32);
+nonmax!(signed, i64, NonMaxI64);
+nonmax!(signed, i128, NonMaxI128);
+nonmax!(signed, isize, NonMaxIsize);
+
+nonmax!(unsigned, u8, NonMaxU8);
+nonmax!(unsigned, u16, NonMaxU16);
+nonmax!(unsigned, u32, NonMaxU32);
+nonmax!(unsigned, u64, NonMaxU64);
+nonmax!(unsigned, u128, NonMaxU128);
+nonmax!(unsigned, usize, NonMaxUsize);
 
 // https://doc.rust-lang.org/1.47.0/src/core/convert/num.rs.html#383-407
 macro_rules! impl_nonmax_from {
