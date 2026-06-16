@@ -353,7 +353,7 @@ macro_rules! nonmax {
             }
 
             #[test]
-            #[cfg(feature = "serde")]
+            #[cfg(all(feature = "serde", feature = "std"))]
             fn serde() {
                 for &value in [0, 19, $primitive::MAX - 1].iter() {
                     let nonmax_value = NonMax::<$primitive>::new(value).unwrap();
